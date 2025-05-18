@@ -217,6 +217,28 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply("Pong! I'm alive! Ping: " + client.ws.ping)
         break;
       }
+      case 'commands': {
+  const embed = new EmbedBuilder()
+    .setTitle('Available Commands')
+    .setColor(0x00AE86)
+    .setDescription(
+      `/startbracket – Start a new tournament bracket and choose format (single or double elimination).\n` +
+      `/join – Join the current tournament in this channel. (Can only be used in the same channel where /startbracket was run)\n` +
+      `/leave – Leave the current tournament before it starts. (Can only be used in the same channel where /startbracket was run. Leaving during active tourney marks your username as “BYE”)\n` +
+      `/start – Start the tournament when players are ready.\n` +
+      `/say – Make the bot say a custom message in the channel.\n` +
+      `/about – Get info about the bot and its creator.\n` +
+      `/ping – Check the bot's status and latency.\n` +
+      `/logwin – (Admin only) Manually log a win by selecting winner and loser.\n` +
+      `/support – Get a link to the support server.`
+    )
+    .setFooter({ text: 'Tournament Bot • Use slash commands for quick access' })
+    .setTimestamp();
+
+  interaction.reply({ embeds: [embed], ephemeral: true });
+  break;
+}
+
       case 'support': {
         await interaction.reply("Our support server link is:" + " https://discord.gg/f2rMKaQvP9")
         break;
@@ -297,7 +319,8 @@ const commands = [
   new SlashCommandBuilder().setName('logwin').setDescription('Admin only: Log a match result manually.')
     .addUserOption(option => option.setName('winner').setDescription('Match winner').setRequired(true))
     .addUserOption(option => option.setName('loser').setDescription('Match loser').setRequired(true)),
-  new SlashCommandBuilder().setName('support').setDescription('A link to the support server')
+  new SlashCommandBuilder().setName('support').setDescription('A link to the support server'),
+  new SlashCommandBuilder().setName('commands').setDescription('A list of what I can do!')
 ]
 .map(cmd => cmd.toJSON());
 
