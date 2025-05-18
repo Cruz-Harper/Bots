@@ -127,19 +127,10 @@ function runNextMatch(bracket, channel) {
     if (winners.length === 1) {
       const finalWinner = winners[0];
       channel.send(`🏆 The tournament is over! Winner: **${finalWinner.username}**`);
-    } else {
-      channel.send(`⚠️ Tournament ended, but multiple unresolved winners exist.`);
+      return;
     }
-    return;
-  }
 
-  // Otherwise, continue with the next match
-  const match = bracket.matchups[bracket.currentMatchIndex];
-  if (!match.winner) {
-    channel.send(`Next match: ${match.player1.username} vs ${match.player2.username}`);
-  }
-}
-
+    // 👇 Move this code here:
     if (bracket.format === 'double_elim') {
       if (!bracket.losersBracket) bracket.losersBracket = [];
       bracket.losersBracket.push(...bracket.matchups.filter(m => m.winner !== m[0] && m.winner !== m[1]));
@@ -153,9 +144,13 @@ function runNextMatch(bracket, channel) {
     return;
   }
 
+  // Otherwise, continue with the next match
   const match = bracket.matchups[bracket.currentMatchIndex];
-  startCheckIn(match, channel, bracket);
+  if (!match.winner) {
+    startCheckIn(match, channel, bracket);
+  }
 }
+
 
 client.on('interactionCreate', async interaction => {
   if (interaction.isChatInputCommand()) {
