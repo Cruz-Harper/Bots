@@ -116,11 +116,29 @@ function resolveMatch(winner, match, channel, bracket) {
 
 function runNextMatch(bracket, channel) {
   if (bracket.currentMatchIndex >= bracket.matchups.length) {
-    const winners = bracket.matchups.map(m => m.winner).filter(Boolean);
-    if (winners.length <= 1) {
-      channel.send(`🏆 The tournament is over! Winner: **${winners[0].username}**`);
+    const unresolved = bracket.matchups.find(m => !m.winner);
+
+    if (unresolved) {
+      channel.send(`⏳ Waiting for a match between ${unresolved.player1.username} and ${unresolved.player2.username || 'BYE'} to finish.`);
       return;
     }
+
+    const winners = bracket.matchups.map(m => m.winner).filter(Boolean);
+    if (winners.length === 1) {
+      const finalWinner = winners[0];
+      channel.send(`🏆 The tournament is over! Winner: **${finalWinner.username}**`);
+    } else {
+      channel.send(`⚠️ Tournament ended, but multiple unresolved winners exist.`);
+    }
+    return;
+  }
+
+  // Otherwise, continue with the next match
+  const match = bracket.matchups[bracket.currentMatchIndex];
+  if (!match.winner) {
+    channel.send(`Next match: ${match.player1.username} vs ${match.player2.username}`);
+  }
+}
 
     if (bracket.format === 'double_elim') {
       if (!bracket.losersBracket) bracket.losersBracket = [];
