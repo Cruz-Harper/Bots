@@ -210,11 +210,15 @@ client.on('interactionCreate', async interaction => {
         break;
       }
       case 'about': {
-        await interaction.reply("I am a tournament bot created by `@qmqz2`. I am used to smoothly and easily host tournaments for any game without the hassle of doing a million things. I'm in early development so if you discover any bugs or have any suggestions, please DM me: `@qmqz2`!");
+        await interaction.reply("I am a tournament bot created by `@qmqz2`. I am used to smoothly and easily host tournaments for any game without the hassle of doing a million things. I'm in early development so if you discover any bugs or have any suggestions, please DM me: `@qmqz2`! Or post your ideas in the `bot-suggestions` forum in my support server. Type /support for a link to the support server ");
         break;
       }
       case 'ping': {
         await interaction.reply("Pong! I'm alive! Ping: " + client.ws.ping)
+        break;
+      }
+      case 'support': {
+        await interaction.reply("Our support server link is:" + " https://discord.gg/f2rMKaQvP9")
         break;
       }
       case 'logwin': {
@@ -292,7 +296,8 @@ const commands = [
   new SlashCommandBuilder().setName('ping').setDescription('Check if I am alive!'),
   new SlashCommandBuilder().setName('logwin').setDescription('Admin only: Log a match result manually.')
     .addUserOption(option => option.setName('winner').setDescription('Match winner').setRequired(true))
-    .addUserOption(option => option.setName('loser').setDescription('Match loser').setRequired(true))
+    .addUserOption(option => option.setName('loser').setDescription('Match loser').setRequired(true)),
+  new SlashCommandBuilder().setName('support').setDescription('A link to the support server')
 ]
 .map(cmd => cmd.toJSON());
 
