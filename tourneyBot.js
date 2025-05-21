@@ -335,5 +335,41 @@ const rest = new REST({ version: '10' }).setToken(TOKEN2);
   }
 })();
 
+async function notifyAllServers(message) {
+  for (const guild of client.guilds.cache.values()) {
+    try {
+      // Try system channel first, fallback to any channel bot can send in
+      const channel = guild.systemChannel 
+        || guild.channels.cache.find(ch => ch.isTextBased() && ch.permissionsFor(guild.members.me).has('SendMessages'));
+      if (channel) {
+        await channel.send(message);
+      }
+    } catch (e) {
+      console.log(`Failed to notify guild ${guild.id}:`, e);
+    }
+  }
+}
+
+client.on('error', error => {
+  console.error('Client error:', error);
+  notifyAllServers('⚠️ Bot encountered an error and might go offline...');
+});
+
+client.once('ready', () => {
+  console.log(`✅ Bot is online as ${client.user.tag}`);
+  notifyAllServers('✅ Bot has restarted and is now online!');
+});
+
+process.on('uncaughtException', error => {
+  console.error('Uncaught exception:', error);
+  notifyAllServers('⚠️ Bot crashed due to an uncaught exception.');
+});
+
+process.on('unhandledRejection', error => {
+  console.error('Unhandled rejection:', error);
+  notifyAllServers('⚠️ Bot crashed due to an unhandled promise rejection.');
+});
+
+
 client.login(TOKEN2);
 
