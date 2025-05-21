@@ -339,8 +339,8 @@ client.on('interactionCreate', async interaction => {
       brackets.set(interaction.channel.id, bracket);
       await interaction.update({ content: 'Bracket created! Players can now /join.', components: [] });
     }
-  }
-});
+
+  
 
 const commands = [
   new SlashCommandBuilder().setName('startbracket').setDescription('Start a new tournament bracket.'),
