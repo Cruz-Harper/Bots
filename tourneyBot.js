@@ -150,8 +150,54 @@ function runNextMatch(bracket, channel) {
   }
 }
 
-
+// ========== MAIN INTERACTION HANDLER ==========
 client.on('interactionCreate', async interaction => {
+  // Handle Button Interactions
+  if (interaction.isButton()) {
+    const customId = interaction.customId;
+    const userId = interaction.user.id;
+
+    if (customId.startsWith('checkin_')) {
+      const checkinId = customId.split('_')[1];
+      let found = false;
+      for (const [key, data] of checkIns.entries()) {
+        if (key.includes(checkinId)) {
+          try {
+            data[checkinId === data.match[0].id ? 'p1' : 'p2'] = true;
+            await interaction.reply({ content: '✅ Check-in successful!', ephemeral: true });
+          } catch (err) {
+            console.error('❌ Failed to handle check-in interaction:', err);
+            await interaction.reply({ content: '❌ An error occurred while checking in.', ephemeral: true });
+          }
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        console.warn('⚠️ Check-in attempted but match data not found for:', checkinId);
+        await interaction.reply({ content: '❌ Match not found or already started.', ephemeral: true });
+      }
+      return;
+    }
+
+    if (customId === 'single_elim' || customId === 'double_elim') {
+      const state = userBracketState.get(userId);
+      if (!state || state.channelId !== interaction.channel.id) return;
+      const bracket = {
+        players: [],
+        matchups: [],
+        round: 1,
+        currentMatchIndex: 0,
+        format: customId,
+        results: []
+      };
+      brackets.set(interaction.channel.id, bracket);
+      await interaction.update({ content: 'Bracket created! Players can now /join.', components: [] });
+      return;
+    }
+  }
+
+  // Handle Slash Commands
   if (interaction.isChatInputCommand()) {
     const displayName = interaction.member?.nickname || interaction.member?.user?.globalName || interaction.user.globalName || interaction.user.username;
     const isAdmin = interaction.member?.permissions?.has(PermissionsBitField.Flags.Administrator);
@@ -209,7 +255,7 @@ client.on('interactionCreate', async interaction => {
         break;
       }
       case 'about': {
-        await interaction.reply("I am a tournament bot created by `@qmqz2`. I am used to smoothly and easily host tournaments for any game without the hassle of doing a million things. I'm in early development so if you discover any bugs or have any suggestions, please DM me: `@qmqz2`! Or post your ideas in the `bot-suggestions` forum in my support server. Type /support for a link to the support server ");
+        await interaction.reply("I am a tournament bot created by `@qmqz2`. I am used to smoothly and easily host tournaments for any game without the hassle of doing a million things. I'm in early development.");
         break;
       }
       case 'ping': {
@@ -217,131 +263,88 @@ client.on('interactionCreate', async interaction => {
         break;
       }
       case 'commands': {
-  const embed = new EmbedBuilder()
-    .setTitle('Available Commands')
-    .setColor(0x00AE86)
-    .setDescription(
-      `/startbracket – Start a new tournament bracket and choose format (single or double elimination).\n` +
-      `/join – Join the current tournament in this channel. (Can only be used in the same channel where /startbracket was run)\n` +
-      `/leave – Leave the current tournament before it starts. (Can only be used in the same channel where /startbracket was run. Leaving during active tourney marks your username as “BYE”)\n` +
-      `/start – Start the tournament when players are ready.\n` +
-      `/say – Make the bot say a custom message in the channel.\n` +
-      `/about – Get info about the bot and its creator.\n` +
-      `/ping – Check the bot's status and latency.\n` +
-      `/logwin – (Admin only) Manually log a win by selecting winner and loser.\n` +
-      `/support – Get a link to the support server.`
-    )
-    .setFooter({ text: 'Tournament Bot • Use slash commands for quick access' })
-    .setTimestamp();
-
-  interaction.reply({ embeds: [embed], ephemeral: true });
-  break;
-}
-
+        const embed = new EmbedBuilder()
+          .setTitle('Available Commands')
+          .setColor(0x00AE86)
+          .setDescription(
+            `/startbracket – Start a new tournament bracket and choose format (single or double elimination).\n` +
+            `/join – Join the current tournament in this channel. (Can only be used in the same channel where /startbracket was run)\n` +
+            `/leave – Leave the current tournament before it starts. (Can only be used in the same channel where /startbracket was run. Leaving during active tourney marks your username as “BYE”)\n` +
+            `/start – Start the tournament when players are ready.\n` +
+            `/say – Make the bot say a custom message in the channel.\n` +
+            `/about – Get info about the bot and its creator.\n` +
+            `/ping – Check the bot's status and latency.\n` +
+            `/logwin – (Admin only) Manually log a win by selecting winner and loser.\n` +
+            `/support – Get a link to the support server.`
+          )
+          .setFooter({ text: 'Tournament Bot • Use slash commands for quick access' })
+          .setTimestamp();
+        interaction.reply({ embeds: [embed], ephemeral: true });
+        break;
+      }
       case 'support': {
         await interaction.reply("Our support server link is:" + " https://discord.gg/f2rMKaQvP9")
         break;
       }
-    case 'logwin': {
-  const winner = interaction.options.getUser('winner');
-  const loser = interaction.options.getUser('loser');
-  const bracket = brackets.get(interaction.channel.id);
-  if (!bracket) return interaction.reply({ content: '❌ No active bracket in this channel.', ephemeral: true });
+      case 'logwin': {
+        const winner = interaction.options.getUser('winner');
+        const loser = interaction.options.getUser('loser');
+        const bracket = brackets.get(interaction.channel.id);
+        if (!bracket) return interaction.reply({ content: '❌ No active bracket in this channel.', ephemeral: true });
 
-  const match = bracket.matchups[bracket.currentMatchIndex];
-  if (!match) return interaction.reply({ content: '❌ No active match to log.', ephemeral: true });
+        const match = bracket.matchups[bracket.currentMatchIndex];
+        if (!match) return interaction.reply({ content: '❌ No active match to log.', ephemeral: true });
 
-  const winnerPlayer = match.find(p => p.id === winner.id);
-  const loserPlayer = match.find(p => p.id === loser.id);
-  if (!winnerPlayer || !loserPlayer) {
-    return interaction.reply({ content: '❌ Those users are not in the current match.', ephemeral: true });
-  }
-
-  const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('confirm_win').setLabel('✅ Confirm Win').setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId('decline_win').setLabel('❌ Decline').setStyle(ButtonStyle.Danger)
-  );
-
-  await interaction.reply({
-    content: `🏁 ${winner.username} claims a win against ${loser.username}.\nBoth players must confirm below.`,
-    components: [row]
-  });
-
-  const filter = i => [winner.id, loser.id].includes(i.user.id) && ['confirm_win', 'decline_win'].includes(i.customId);
-  const confirmed = new Set();
-
-  const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60_000 });
-
-  collector.on('collect', async i => {
-    if (i.customId === 'decline_win') {
-      collector.stop('declined');
-      return i.reply({ content: '❌ Match report was declined.', ephemeral: true });
-    }
-
-    confirmed.add(i.user.id);
-    await i.reply({ content: '✅ Confirmation received.', ephemeral: true });
-
-    if (confirmed.has(winner.id) && confirmed.has(loser.id)) {
-      resolveMatch(winnerPlayer, match, interaction.channel, bracket);
-      collector.stop('confirmed');
-      await interaction.followUp({ content: `✅ Both players confirmed: ${winner.username} defeated ${loser.username}.` });
-    }
-  });
-
-  collector.on('end', (collected, reason) => {
-    if (reason === 'time') {
-      interaction.followUp({ content: '⌛ Match confirmation timed out. Please try again.' });
-    }
-  });
-
-  break;
-}
-
-
-  if (interaction.isButton()) {
-    const customId = interaction.customId;
-    const userId = interaction.user.id;
-
-    if (customId.startsWith('checkin_')) {
-      const checkinId = customId.split('_')[1];
-      let found = false;
-      for (const [key, data] of checkIns.entries()) {
-        if (key.includes(checkinId)) {
-          try {
-            data[checkinId === data.match[0].id ? 'p1' : 'p2'] = true;
-            await interaction.reply({ content: '✅ Check-in successful!', ephemeral: true });
-          } catch (err) {
-            console.error('❌ Failed to handle check-in interaction:', err);
-            await interaction.reply({ content: '❌ An error occurred while checking in.', ephemeral: true });
-          }
-          found = true;
-          break;
+        const winnerPlayer = match.find(p => p.id === winner.id);
+        const loserPlayer = match.find(p => p.id === loser.id);
+        if (!winnerPlayer || !loserPlayer) {
+          return interaction.reply({ content: '❌ Those users are not in the current match.', ephemeral: true });
         }
+
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId('confirm_win').setLabel('✅ Confirm Win').setStyle(ButtonStyle.Success),
+          new ButtonBuilder().setCustomId('decline_win').setLabel('❌ Decline').setStyle(ButtonStyle.Danger)
+        );
+
+        await interaction.reply({
+          content: `🏁 ${winner.username} claims a win against ${loser.username}.\nBoth players must confirm below.`,
+          components: [row]
+        });
+
+        const filter = i => [winner.id, loser.id].includes(i.user.id) && ['confirm_win', 'decline_win'].includes(i.customId);
+        const confirmed = new Set();
+
+        const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60_000 });
+
+        collector.on('collect', async i => {
+          if (i.customId === 'decline_win') {
+            collector.stop('declined');
+            return i.reply({ content: '❌ Match report was declined.', ephemeral: true });
+          }
+
+          confirmed.add(i.user.id);
+          await i.reply({ content: '✅ Confirmation received.', ephemeral: true });
+
+          if (confirmed.has(winner.id) && confirmed.has(loser.id)) {
+            resolveMatch(winnerPlayer, match, interaction.channel, bracket);
+            collector.stop('confirmed');
+            await interaction.followUp({ content: `✅ Both players confirmed: ${winner.username} defeated ${loser.username}.` });
+          }
+        });
+
+        collector.on('end', (collected, reason) => {
+          if (reason === 'time') {
+            interaction.followUp({ content: '⌛ Match confirmation timed out. Please try again.' });
+          }
+        });
+
+        break;
       }
-      if (!found) {
-        console.warn('⚠️ Check-in attempted but match data not found for:', checkinId);
-        await interaction.reply({ content: '❌ Match not found or already started.', ephemeral: true });
-      }
-      return;
     }
+  }
+});
 
-    if (customId === 'single_elim' || customId === 'double_elim') {
-      const state = userBracketState.get(userId);
-      if (!state || state.channelId !== interaction.channel.id) return;
-      const bracket = {
-        players: [],
-        matchups: [],
-        round: 1,
-        currentMatchIndex: 0,
-        format: customId,
-        results: []
-      };
-      brackets.set(interaction.channel.id, bracket);
-      await interaction.update({ content: 'Bracket created! Players can now /join.', components: [] });
-    }
-
-  
-
+// ========== COMMAND REGISTRATION ==========
 const commands = [
   new SlashCommandBuilder().setName('startbracket').setDescription('Start a new tournament bracket.'),
   new SlashCommandBuilder().setName('join').setDescription('Join the current tournament.'),
@@ -404,7 +407,5 @@ process.on('unhandledRejection', error => {
   notifyAllServers('⚠️ Bot crashed due to an unhandled promise rejection.');
 });
 
-});
-    
 client.login(TOKEN2);
 
