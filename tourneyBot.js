@@ -13,6 +13,7 @@ const {
   Collection
 } = require('discord.js');
 const fs = require('fs');
+const { createCanvas, loadImage } = require('canvas');
 
 // Keeps bot running and checking for commands:
 const express = require('express');
@@ -50,6 +51,30 @@ const checkIns = new Map();
 
 function shuffleArray(array) {
   return array.map(a => [Math.random(), a]).sort((a, b) => a[0] - b[0]).map(a => a[1]);
+}
+
+async function drawBracketImage(players, matchups, round) {
+  const width = 500;
+  const height = Math.max(250, players.length * 40);
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#23272a';
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.font = '20px Sans';
+  ctx.fillStyle = '#fff';
+  ctx.fillText(`Round ${round} Bracket`, 20, 30);
+
+  let y = 60;
+  matchups.forEach((match, i) => {
+    ctx.fillStyle = '#7289da';
+    ctx.fillRect(20, y - 20, 460, 32);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(`${match[0]?.username || 'TBD'} vs ${match[1]?.username || 'BYE'}`, 30, y);
+    y += 40;
+  });
+
+  return canvas.toBuffer();
 }
 
 function generateMatchups(players) {
@@ -286,6 +311,18 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply("Our support server link is:" + " https://discord.gg/f2rMKaQvP9")
         break;
       }
+      case 'bracket': {
+  const bracket = brackets.get(interaction.channel.id);
+  if (!bracket || !bracket.players.length) {
+    await interaction.reply({ content: 'No bracket started!', ephemeral: true });
+    break;
+  }
+  const buf = await drawBracketImage(bracket.players, bracket.matchups || [], bracket.round || 1);
+  await interaction.reply({
+    files: [{ attachment: buf, name: 'bracket.png' }]
+  });
+  break;
+}
       case 'logwin': {
         const winner = interaction.options.getUser('winner');
         const loser = interaction.options.getUser('loser');
@@ -358,6 +395,7 @@ const commands = [
     .addUserOption(option => option.setName('loser').setDescription('Match loser').setRequired(true)),
   new SlashCommandBuilder().setName('support').setDescription('A link to the support server'),
   new SlashCommandBuilder().setName('commands').setDescription('A list of what I can do!')
+  new SlashCommandBuilder().setName('bracket').setDescription('Show the current tournament bracket as an image.'),
 ]
 .map(cmd => cmd.toJSON());
 
