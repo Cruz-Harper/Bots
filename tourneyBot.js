@@ -14,7 +14,7 @@ const {
 } = require('discord.js');
 const fs = require('fs');
 
-// Add Express setup here:
+// Keeps bot running and checking for commands:
 const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -130,7 +130,6 @@ function runNextMatch(bracket, channel) {
       return;
     }
 
-    // 👇 Move this code here:
     if (bracket.format === 'double_elim') {
       if (!bracket.losersBracket) bracket.losersBracket = [];
       bracket.losersBracket.push(...bracket.matchups.filter(m => m.winner !== m[0] && m.winner !== m[1]));
@@ -243,26 +242,61 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply("Our support server link is:" + " https://discord.gg/f2rMKaQvP9")
         break;
       }
-      case 'logwin': {
-        if (!isAdmin) return interaction.reply({ content: '❌ Only admins can use this command.', ephemeral: true });
-        const winner = interaction.options.getUser('winner');
-        const loser = interaction.options.getUser('loser');
-        const bracket = brackets.get(interaction.channel.id);
-        if (!bracket) return interaction.reply({ content: '❌ No active bracket in this channel.', ephemeral: true });
+    case 'logwin': {
+  const winner = interaction.options.getUser('winner');
+  const loser = interaction.options.getUser('loser');
+  const bracket = brackets.get(interaction.channel.id);
+  if (!bracket) return interaction.reply({ content: '❌ No active bracket in this channel.', ephemeral: true });
 
-        const match = bracket.matchups[bracket.currentMatchIndex];
-        if (!match) return interaction.reply({ content: '❌ No active match to log.', ephemeral: true });
+  const match = bracket.matchups[bracket.currentMatchIndex];
+  if (!match) return interaction.reply({ content: '❌ No active match to log.', ephemeral: true });
 
-        const winnerPlayer = match.find(p => p.id === winner.id);
-        const loserPlayer = match.find(p => p.id === loser.id);
-        if (!winnerPlayer || !loserPlayer) return interaction.reply({ content: '❌ Those users are not in the current match.', ephemeral: true });
-
-        resolveMatch(winnerPlayer, match, interaction.channel, bracket);
-        await interaction.reply(`✅ Manually logged: ${winner.username} defeated ${loser.username}.`);
-        break;
-      }
-    }
+  const winnerPlayer = match.find(p => p.id === winner.id);
+  const loserPlayer = match.find(p => p.id === loser.id);
+  if (!winnerPlayer || !loserPlayer) {
+    return interaction.reply({ content: '❌ Those users are not in the current match.', ephemeral: true });
   }
+
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('confirm_win').setLabel('✅ Confirm Win').setStyle(ButtonStyle.Success),
+    new ButtonBuilder().setCustomId('decline_win').setLabel('❌ Decline').setStyle(ButtonStyle.Danger)
+  );
+
+  await interaction.reply({
+    content: `🏁 ${winner.username} claims a win against ${loser.username}.\nBoth players must confirm below.`,
+    components: [row]
+  });
+
+  const filter = i => [winner.id, loser.id].includes(i.user.id) && ['confirm_win', 'decline_win'].includes(i.customId);
+  const confirmed = new Set();
+
+  const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60_000 });
+
+  collector.on('collect', async i => {
+    if (i.customId === 'decline_win') {
+      collector.stop('declined');
+      return i.reply({ content: '❌ Match report was declined.', ephemeral: true });
+    }
+
+    confirmed.add(i.user.id);
+    await i.reply({ content: '✅ Confirmation received.', ephemeral: true });
+
+    if (confirmed.has(winner.id) && confirmed.has(loser.id)) {
+      resolveMatch(winnerPlayer, match, interaction.channel, bracket);
+      collector.stop('confirmed');
+      await interaction.followUp({ content: `✅ Both players confirmed: ${winner.username} defeated ${loser.username}.` });
+    }
+  });
+
+  collector.on('end', (collected, reason) => {
+    if (reason === 'time') {
+      interaction.followUp({ content: '⌛ Match confirmation timed out. Please try again.' });
+    }
+  });
+
+  break;
+}
+
 
   if (interaction.isButton()) {
     const customId = interaction.customId;
