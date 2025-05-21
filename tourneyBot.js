@@ -394,8 +394,8 @@ const commands = [
     .addUserOption(option => option.setName('winner').setDescription('Match winner').setRequired(true))
     .addUserOption(option => option.setName('loser').setDescription('Match loser').setRequired(true)),
   new SlashCommandBuilder().setName('support').setDescription('A link to the support server'),
-  new SlashCommandBuilder().setName('commands').setDescription('A list of what I can do!')
-  new SlashCommandBuilder().setName('bracket').setDescription('Show the current tournament bracket as an image.'),
+  new SlashCommandBuilder().setName('commands').setDescription('A list of what I can do!'),
+  new SlashCommandBuilder().setName('bracket').setDescription('Show the current tournament bracket as an image.')
 ]
 .map(cmd => cmd.toJSON());
 
