@@ -493,5 +493,5 @@ process.on('unhandledRejection', error => {
   notifyAllServers('⚠️ Bot crashed due to an unhandled promise rejection.');
 });
 
-client.login(TOKEN2);
+client.login(process.env.TOKEN2);
 
