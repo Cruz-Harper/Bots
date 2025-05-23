@@ -3,6 +3,9 @@ const { Client, GatewayIntentBits, PermissionsBitField, ActionRowBuilder, Button
 const { createCanvas } = require('canvas');
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers] });
 
+const TOKEN2 = process.env.TOKEN2;
+const CLIENT_ID = process.env.CLIENT_ID;
+
 const userBracketState = new Map();
 const brackets = new Map();
 const checkIns = new Map();
