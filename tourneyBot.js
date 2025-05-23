@@ -414,6 +414,10 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply("Pong! I'm alive! Ping: " + client.ws.ping)
         break;
       }
+      case 'support': {
+        await interaction.reply("https://discord.gg/f2rMKaQvP9")
+        break;
+      }
       case 'commands': {
         const embed = new EmbedBuilder()
           .setTitle('Available Commands')
@@ -424,7 +428,8 @@ client.on('interactionCreate', async interaction => {
             `/leave – Leave the current tournament before it starts.\n` +
             `/start – Begin the tournament.\n` +
             `/bracket – Show the current bracket image.\n` +
-            `/logwin – Admin-only: Log a win (for manual override).`
+            `/logwin – Admin-only: Log a win (for manual override).\n`+
+            `/support – Get a link to our support server.`
           );
         await interaction.reply({ embeds: [embed] });
         break;
@@ -447,7 +452,8 @@ const commands = [
       option.setName('loser').setDescription('Who lost the match?').setRequired(true)),
   new SlashCommandBuilder().setName('about').setDescription('About the bot.'),
   new SlashCommandBuilder().setName('ping').setDescription('Ping the bot.'),
-  new SlashCommandBuilder().setName('commands').setDescription('Show available commands.')
+  new SlashCommandBuilder().setName('commands').setDescription('Show available commands.'),
+  new SlashCommandBuilder().setName('support').setDescription('A link to our support server.')
 ];
 
 const rest = new REST({ version: '10' }).setToken(TOKEN2);
