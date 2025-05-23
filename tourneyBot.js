@@ -370,42 +370,76 @@ client.on('interactionCreate', async interaction => {
         break;
       }
       case 'logwin': {
-        const winner = interaction.options.getUser('winner');
-        const loser = interaction.options.getUser('loser');
-        const bracket = brackets.get(interaction.channel.id);
-        if (!bracket) return interaction.reply({ content: '❌ No active bracket in this channel.', ephemeral: true });
+    const winner = interaction.options.getUser('winner');
+    const loser = interaction.options.getUser('loser');
+    const bracket = brackets.get(interaction.channel.id);
+    if (!bracket) return interaction.reply({ content: '❌ No active bracket in this channel.', ephemeral: true });
 
-        // Grand finals
-        if (bracket.grandFinalsMatch && !bracket.finalStage) {
-          const match = bracket.grandFinalsMatch;
-          const winnerPlayer = match.find(p => p.id === winner.id);
-          const loserPlayer = match.find(p => p.id === loser.id);
-          if (!winnerPlayer || !loserPlayer) {
-            return interaction.reply({ content: '❌ Those users are not in the current grand finals match.', ephemeral: true });
-          }
-          resolveMatch(winnerPlayer, match, interaction.channel, bracket, false, true);
-          return;
+    // Find the current match in winners or losers bracket or grand finals
+    let match, winnerPlayer, loserPlayer, losersBracket = false, grandFinals = false;
+    if (bracket.grandFinalsMatch && !bracket.finalStage) {
+        match = bracket.grandFinalsMatch;
+        grandFinals = true;
+    } else if (bracket.matchups && bracket.currentMatchIndex < bracket.matchups.length) {
+        match = bracket.matchups[bracket.currentMatchIndex];
+    } else if (bracket.losersMatchups && bracket.losersCurrentMatchIndex < bracket.losersMatchups.length) {
+        match = bracket.losersMatchups[bracket.losersCurrentMatchIndex];
+        losersBracket = true;
+    }
+    if (!match) return interaction.reply({ content: '❌ No active match to log.', ephemeral: true });
+
+    winnerPlayer = match.find(p => p && p.id === winner.id);
+    loserPlayer = match.find(p => p && p.id === loser.id);
+    if (!winnerPlayer || !loserPlayer) {
+        return interaction.reply({ content: '❌ Those users are not in the current match.', ephemeral: true });
+    }
+
+    // Send confirmation buttons
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('confirm_win').setLabel('✅ Confirm Win').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId('decline_win').setLabel('❌ Decline').setStyle(ButtonStyle.Danger)
+    );
+
+    await interaction.reply({
+        content: `🏁 ${winner.username} claims a win against ${loser.username}.\nBoth players must confirm below.`,
+        components: [row],
+        ephemeral: false
+    });
+
+    const filter = i => [winner.id, loser.id].includes(i.user.id) && ['confirm_win', 'decline_win'].includes(i.customId);
+    const confirmed = new Set();
+
+    const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60_000 });
+
+    collector.on('collect', async i => {
+        if (i.customId === 'decline_win') {
+            collector.stop('declined');
+            await i.reply({ content: '❌ Match report was declined.', ephemeral: true });
+            return;
         }
-
-        // Winners bracket
-        let match = bracket.matchups[bracket.currentMatchIndex];
-        let winnerPlayer = match?.find(p => p && p.id === winner.id);
-        let loserPlayer = match?.find(p => p && p.id === loser.id);
-
-        if (!winnerPlayer || !loserPlayer) {
-          // Losers bracket
-          match = bracket.losersMatchups[bracket.losersCurrentMatchIndex];
-          winnerPlayer = match?.find(p => p && p.id === winner.id);
-          loserPlayer = match?.find(p => p && p.id === loser.id);
-          if (!winnerPlayer || !loserPlayer) {
-            return interaction.reply({ content: '❌ Those users are not in the current match.', ephemeral: true });
-          }
-          resolveMatch(winnerPlayer, match, interaction.channel, bracket, true, false);
-          return;
+        confirmed.add(i.user.id);
+        await i.reply({ content: '✅ Confirmation received.', ephemeral: true });
+        if (confirmed.has(winner.id) && confirmed.has(loser.id)) {
+            if (grandFinals) {
+                resolveMatch(winnerPlayer, match, interaction.channel, bracket, false, true);
+            } else if (losersBracket) {
+                resolveMatch(winnerPlayer, match, interaction.channel, bracket, true, false);
+            } else {
+                resolveMatch(winnerPlayer, match, interaction.channel, bracket, false, false);
+            }
+            collector.stop('confirmed');
+            await interaction.followUp({ content: `✅ Both players confirmed: ${winner.username} defeated ${loser.username}.` });
         }
-        resolveMatch(winnerPlayer, match, interaction.channel, bracket, false, false);
-        break;
-      }
+    });
+
+    collector.on('end', (collected, reason) => {
+        if (reason === 'time') {
+            interaction.followUp({ content: '⌛ Match confirmation timed out. Please try again.' });
+        }
+    });
+
+    break;
+}
       case 'about': {
         await interaction.reply("I am a tournament bot created by `@qmqz2`. I am used to smoothly and easily host tournaments for any game without the hassle of doing a million things. I'm in early development.");
         break;
