@@ -54,25 +54,79 @@ function shuffleArray(array) {
 }
 
 async function drawBracketImage(players, matchups, round) {
-  const width = 500;
-  const height = Math.max(250, players.length * 40);
+  const width = 600;
+  const height = Math.max(300, players.length * 50);
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
+
+  // Background
   ctx.fillStyle = '#23272a';
   ctx.fillRect(0, 0, width, height);
 
-  ctx.font = '20px Sans';
+  // Title
+  ctx.font = '24px Sans';
   ctx.fillStyle = '#fff';
-  ctx.fillText(`Round ${round} Bracket`, 20, 30);
+  ctx.fillText(`Round ${round} Bracket`, 20, 40);
 
-  let y = 60;
+  // Constants for drawing
+  const startX = 50;
+  const boxWidth = 200;
+  const boxHeight = 30;
+  const verticalSpacing = 50;
+
+  // Draw matchups with boxes and connectors
   matchups.forEach((match, i) => {
+    const y = 60 + i * verticalSpacing;
+
+    // Draw box background for match
     ctx.fillStyle = '#7289da';
-    ctx.fillRect(20, y - 20, 460, 32);
+    ctx.fillRect(startX, y, boxWidth, boxHeight);
+
+    // Player 1 name
     ctx.fillStyle = '#fff';
-    ctx.fillText(`${match[0]?.username || 'TBD'} vs ${match[1]?.username || 'BYE'}`, 30, y);
-    y += 40;
+    ctx.font = '16px Sans';
+    ctx.fillText(match[0]?.username || 'TBD', startX + 10, y + 20);
+
+    // VS Text
+    ctx.fillStyle = '#fff';
+    ctx.font = '14px Sans';
+    ctx.fillText('vs', startX + boxWidth / 2 - 10, y + 20);
+
+    // Player 2 name (or BYE)
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px Sans';
+    ctx.fillText(match[1]?.username || 'BYE', startX + boxWidth - 80, y + 20);
+
+    // Draw connecting lines for visualization (if next round exists)
+    if (round > 1) {
+      // Draw lines connecting this match to the previous round matches
+      const prevX = startX - 150;
+      const prevY1 = 60 + i * verticalSpacing * 2;
+      const prevY2 = prevY1 + verticalSpacing;
+
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+
+      // Vertical line connecting two previous matches to current match box center
+      ctx.beginPath();
+      ctx.moveTo(prevX + boxWidth, prevY1 + boxHeight / 2);
+      ctx.lineTo(startX, y + boxHeight / 2);
+      ctx.lineTo(prevX + boxWidth, prevY2 + boxHeight / 2);
+      ctx.stroke();
+
+      // Optional small horizontal lines to previous boxes (can be enhanced if you want)
+    }
   });
+
+  // Optionally draw player names on left for round 1 if no matchups yet
+  if (!matchups.length && players.length > 0) {
+    ctx.font = '16px Sans';
+    ctx.fillStyle = '#fff';
+    players.forEach((p, i) => {
+      const y = 60 + i * verticalSpacing + boxHeight / 2;
+      ctx.fillText(p.username || 'TBD', startX, y);
+    });
+  }
 
   return canvas.toBuffer();
 }
