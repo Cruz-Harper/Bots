@@ -446,7 +446,6 @@ const commands = [
   new SlashCommandBuilder().setName('ping').setDescription('Ping the bot.'),
   new SlashCommandBuilder().setName('commands').setDescription('Show available commands.')
 ];
-.map(cmd => cmd.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(TOKEN2);
 (async () => {
