@@ -462,8 +462,9 @@ client.on('interactionCreate', async interaction => {
             `/leave – Leave the current tournament before it starts.\n` +
             `/start – Begin the tournament.\n` +
             `/bracket – Show the current bracket image.\n` +
-            `/logwin – Admin-only: Log a win (for manual override).\n`+
-            `/support – Get a link to our support server.`
+            `/logwin – Log a win (for manual override).\n`+
+            `/support – Get a link to our support server.\n`+
+            `/bracket – Get a PNG image of the current tournament's bracket.`
           );
         await interaction.reply({ embeds: [embed] });
         break;
