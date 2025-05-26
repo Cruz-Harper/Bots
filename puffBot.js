@@ -103,6 +103,26 @@ client.on('interactionCreate', async (interaction) => {
   break;
 }
 
+      case 'mypuff': {
+  const userId = interaction.user.id;
+  const puffs = JSON.parse(fs.readFileSync('puffs.json', 'utf8'));
+  const puff = puffs[userId];
+
+  if (!puff) {
+    await interaction.reply("You haven't adopted a Jigglypuff yet! Use `/adopt` to get started.");
+  } else {
+    await interaction.reply(
+      `🎀 **${puff.name}** [Level ${puff.level}]` +
+      `\n💖 Happiness: ${puff.happiness}` +
+      `\n🌈 Attribute: ${puff.attribute}` +
+      `\n✨ Shiny: ${puff.isShiny ? 'Yes' : 'No'}` +
+      `\n😴 Sleeping: ${puff.isSleeping ? 'Yes' : 'No'}`
+    );
+  }
+  break;
+}
+
+
     default:
       await interaction.reply({ content: 'Unknown command.', ephemeral: true });
   }
@@ -127,6 +147,10 @@ const commands = [
   new SlashCommandBuilder()
     .setName('release')
     .setDescription('Release your current Jigglypuff')
+
+  new SlashCommandBuilder()
+    .setName('mypuff')
+    .setDescription('View your adopted Jigglypuff and its stats')
 ]
 .map(command => command.toJSON());
 
