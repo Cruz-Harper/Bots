@@ -11,8 +11,8 @@ const client = new Client({
 });
 
 // Environment variables
-const TOKEN = process.env.TOKEN3;
-const CLIENT_ID = process.env.CLIENT_ID_2;
+const TOKEN3 = process.env.TOKEN3;
+const CLIENT_ID_2 = process.env.CLIENT_ID_2;
 
 // Ready event
 client.once('ready', () => {
