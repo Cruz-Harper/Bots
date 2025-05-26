@@ -46,34 +46,62 @@ client.on('interactionCreate', async (interaction) => {
   const userId = interaction.user.id;
 
   switch (interaction.commandName) {
-    case 'ping':
+    case 'ping': {
       await interaction.reply(`Puff bot is working! 💤 Ping: ${client.ws.ping}ms`);
       break;
-
-    case 'adopt': {
-      const name = interaction.options.getString('name');
-      const allPuffs = loadPuffs();
-
-      const newPuff = {
-        name,
-        level: 1,
-        happiness: 50,
-        attribute: getRandomAttribute(),
-        isShiny: getRandomShiny(),
-        isSleeping: false
-      };
-
-      if (!allPuffs[userId]) allPuffs[userId] = [];
-      allPuffs[userId].push(newPuff);
-      savePuffs(allPuffs);
-
-      await interaction.reply(
-        `🎉 You adopted **${name}**!\n` +
-        `⭐ Attribute: **${newPuff.attribute}**\n` +
-        `✨ Shiny: ${newPuff.isShiny ? 'Yes!' : 'No'}`
-      );
-      break;
     }
+
+    case 'release': {
+  const fs = require('fs');
+  const userId = interaction.user.id;
+
+  const puffs = fs.existsSync('puffs.json') ? JSON.parse(fs.readFileSync('puffs.json')) : {};
+
+  if (!puffs[userId]) {
+    await interaction.reply("You don't have a Jigglypuff to release.");
+    return;
+  }
+
+  const releasedName = puffs[userId].name;
+  delete puffs[userId];
+
+  fs.writeFileSync('puffs.json', JSON.stringify(puffs, null, 2));
+  await interaction.reply(`You released **${releasedName}** into the wild. 🕊️`);
+  break;
+}
+
+   case 'adopt': {
+  const fs = require('fs');
+  const name = interaction.options.getString('name');
+  const userId = interaction.user.id;
+
+  const attributes = ['Fighter', 'Lazy', 'Energetic', 'Calm', 'Playful', 'Serious', 'Curious'];
+  const attribute = attributes[Math.floor(Math.random() * attributes.length)];
+  const isShiny = Math.random() < 0.05; // 5% chance to be shiny
+
+  let puffs = fs.existsSync('puffs.json') ? JSON.parse(fs.readFileSync('puffs.json')) : {};
+
+  if (puffs[userId]) {
+    await interaction.reply("You already adopted a Jigglypuff! Use `/release` to let it go first.");
+    return;
+  }
+
+  const newPuff = {
+    name,
+    level: 1,
+    happiness: 50,
+    attribute,
+    isShiny,
+    isSleeping: false
+  };
+
+  puffs[userId] = newPuff;
+  fs.writeFileSync('puffs.json', JSON.stringify(puffs, null, 2));
+
+  const shinyMsg = isShiny ? " ✨ It's SHINY!" : "";
+  await interaction.reply(`You adopted **${name}**, a ${attribute} Jigglypuff!${shinyMsg}`);
+  break;
+}
 
     default:
       await interaction.reply({ content: 'Unknown command.', ephemeral: true });
@@ -85,6 +113,7 @@ const commands = [
   new SlashCommandBuilder()
     .setName('ping')
     .setDescription('Tests if the bot is working'),
+
   new SlashCommandBuilder()
     .setName('adopt')
     .setDescription('Adopt a new Jigglypuff and give it a name!')
@@ -93,8 +122,14 @@ const commands = [
         .setName('name')
         .setDescription('The name you want to give your Jigglypuff')
         .setRequired(true)
-    )
-].map(command => command.toJSON());
+    ),
+
+  new SlashCommandBuilder()
+    .setName('release')
+    .setDescription('Release your current Jigglypuff')
+]
+.map(command => command.toJSON());
+
 
 const rest = new REST({ version: '10' }).setToken(TOKEN3);
 
