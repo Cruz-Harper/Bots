@@ -1,27 +1,38 @@
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
 require('dotenv').config();
 
+// Create the Discord client with necessary intents
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds,
-            GatewayIntentBits.GuildMessages,    
-            GatewayIntentBits.MessageContent]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
 });
 
-const TOKEN3 = process.env.TOKEN3;
-const CLIENT_ID_2 = process.env.CLIENT_ID_2;
+// Environment variables
+const TOKEN = process.env.TOKEN3;
+const CLIENT_ID = process.env.CLIENT_ID_2;
 
+// Ready event
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
 
+// Interaction handler with switch
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  if (interaction.commandName === 'test') {
-    await interaction.reply('Puff bot is working! 💤');
+  switch (interaction.commandName) {
+    case 'test':
+      await interaction.reply('Puff bot is working! 💤');
+      break;
+    default:
+      await interaction.reply('Unknown command.');
   }
 });
 
+// Slash command definition
 const commands = [
   new SlashCommandBuilder()
     .setName('test')
@@ -29,19 +40,22 @@ const commands = [
     .toJSON()
 ];
 
-const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
+// Register the slash command globally
+const rest = new REST({ version: '10' }).setToken(TOKEN);
 
 (async () => {
   try {
     console.log('Registering slash command...');
     await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
+      Routes.applicationCommands(CLIENT_ID),
       { body: commands }
     );
     console.log('Slash command registered.');
   } catch (error) {
-    console.error(error);
+    console.error('Error registering command:', error);
   }
 })();
 
-client.login(process.env.TOKEN3);
+// Log in the bot
+client.login(TOKEN);
+
