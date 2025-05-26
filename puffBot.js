@@ -146,7 +146,7 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName('release')
-    .setDescription('Release your current Jigglypuff')
+    .setDescription('Release your current Jigglypuff'),
 
   new SlashCommandBuilder()
     .setName('mypuff')
