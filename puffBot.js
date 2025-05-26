@@ -39,7 +39,7 @@ const attributes = [
   
   switch (interaction.commandName) {
     case 'ping': {
-      await interaction.reply('Puff bot is working! 💤' + "ping is: " + client.ws.ping);
+      await interaction.reply('Puff bot is working! 💤 ' + "ping is: " + client.ws.ping);
       break;
     }
     default:
