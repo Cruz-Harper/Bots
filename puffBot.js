@@ -77,7 +77,7 @@ client.on('interactionCreate', async (interaction) => {
 
   const attributes = ['Fighter', 'Lazy', 'Energetic', 'Calm', 'Playful', 'Serious', 'Curious'];
   const attribute = attributes[Math.floor(Math.random() * attributes.length)];
-  const isShiny = Math.random() < 0.05; // 5% chance to be shiny
+  const isShiny = Math.random() < 0.005; // 0.5% chance to be shiny
 
   let puffs = fs.existsSync('puffs.json') ? JSON.parse(fs.readFileSync('puffs.json')) : {};
 
