@@ -6,7 +6,7 @@ app.get('/', (req, res) => res.send('Bot is alive!'));
 app.listen(3000, () => console.log('Web server running'));
 
 require('./tourneyBot'); // require the tourney bot file to be run also
-
+require('./puffBot'); // require this too
 
 const { Client, GatewayIntentBits, PermissionsBitField } = require('discord.js');
 const fs = require('fs');
