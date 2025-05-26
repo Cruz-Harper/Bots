@@ -49,7 +49,8 @@ const attributes = [
 
 // Slash command definition
 const commands = [
-  new SlashCommandBuilder().setName('ping').setDescription('Tests if the bot is working').toJSON()
+  new SlashCommandBuilder().setName('ping').setDescription('Tests if the bot is working'),
+  new SlashCommandBuilder().setName('adopt') .setDescription('Adopt a new Jigglypuff and give it a name!').addStringOption(option =>option .setName('name').setDescription('The name you want to give your Jigglypuff').setRequired(true)  // Make sure user must provide a name);
 ];
 
 // Register the slash command globally
