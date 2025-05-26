@@ -23,10 +23,25 @@ client.once('ready', () => {
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
+const attributes = [
+  "Fighter",
+  "Lazy",
+  "Energetic",
+  "Calm",
+  "Playful",
+  "Serious",
+  "Curious"
+];
+
+
+
+
+  
   switch (interaction.commandName) {
-    case 'test':
-      await interaction.reply('Puff bot is working! 💤');
+    case 'ping': {
+      await interaction.reply('Puff bot is working! 💤' + "ping is: " + client.ws.ping);
       break;
+    }
     default:
       await interaction.reply('Unknown command.');
   }
@@ -34,10 +49,7 @@ client.on('interactionCreate', async (interaction) => {
 
 // Slash command definition
 const commands = [
-  new SlashCommandBuilder()
-    .setName('test')
-    .setDescription('Tests if the bot is working')
-    .toJSON()
+  new SlashCommandBuilder().setName('ping').setDescription('Tests if the bot is working').toJSON()
 ];
 
 // Register the slash command globally
