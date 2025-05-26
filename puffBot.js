@@ -70,14 +70,17 @@ client.on('interactionCreate', async (interaction) => {
   break;
 }
 
-   case 'adopt': {
+ case 'adopt': {
   const fs = require('fs');
   const name = interaction.options.getString('name');
   const userId = interaction.user.id;
 
   const attributes = ['Fighter', 'Lazy', 'Energetic', 'Calm', 'Playful', 'Serious', 'Curious'];
   const attribute = attributes[Math.floor(Math.random() * attributes.length)];
-  const isShiny = Math.random() < 0.005; // 0.5% chance to be shiny
+
+  // 💫 Shiny logic: 50% for special user, 0.5% for others
+  const isSpecialUser = userId === '1279794540253020264';
+  const isShiny = Math.random() < (isSpecialUser ? 0.5 : 0.005);
 
   let puffs = fs.existsSync('puffs.json') ? JSON.parse(fs.readFileSync('puffs.json')) : {};
 
