@@ -5,6 +5,9 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
+const TOKEN3 = process.env.TOKEN3;
+const CLIENT_ID_2 = process.env.CLIENT_ID_2;
+
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
