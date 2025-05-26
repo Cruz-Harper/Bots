@@ -47,7 +47,7 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
   try {
     console.log('Registering slash command...');
     await rest.put(
-      Routes.applicationCommands(CLIENT_ID),
+      Routes.applicationCommands(CLIENT_ID_2),
       { body: commands }
     );
     console.log('Slash command registered.');
@@ -57,5 +57,5 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 })();
 
 // Log in the bot
-client.login(TOKEN);
+client.login(TOKEN3);
 
