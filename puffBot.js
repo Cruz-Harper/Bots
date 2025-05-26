@@ -66,7 +66,7 @@ client.on('interactionCreate', async (interaction) => {
   delete puffs[userId];
 
   fs.writeFileSync('puffs.json', JSON.stringify(puffs, null, 2));
-  await interaction.reply(`You released **${releasedName}** into the wild. <div class="tenor-gif-embed" data-postid="20246947" data-share-method="host" data-aspect-ratio="1.78771" data-width="100%"><a href="https://tenor.com/view/melandrach-pokemon-jigglypuff-cry-gif-20246947">Melandrach Pokemon GIF</a>from <a href="https://tenor.com/search/melandrach-gifs">Melandrach GIFs</a></div> <script type="text/javascript" async src="https://tenor.com/embed.js"></script>`);
+  await interaction.reply(`You released **${releasedName}** into the wild.\n` + "https://tenor.com/bw7jP.gif");
   break;
 }
 
