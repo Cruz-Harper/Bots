@@ -2,7 +2,9 @@ const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require
 require('dotenv').config();
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds]
+  intents: [GatewayIntentBits.Guilds,
+            GatewayIntentBits.GuildMessages,    
+            GatewayIntentBits.MessageContent]
 });
 
 const TOKEN3 = process.env.TOKEN3;
