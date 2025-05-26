@@ -66,7 +66,7 @@ client.on('interactionCreate', async (interaction) => {
   delete puffs[userId];
 
   fs.writeFileSync('puffs.json', JSON.stringify(puffs, null, 2));
-  await interaction.reply(`You released **${releasedName}** into the wild. 🕊️`);
+  await interaction.reply(`You released **${releasedName}** into the wild. https://tenor.com/bw7jP.gif`);
   break;
 }
 
