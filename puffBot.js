@@ -41,7 +41,7 @@ const commands = [
 ];
 
 // Register the slash command globally
-const rest = new REST({ version: '10' }).setToken(TOKEN);
+const rest = new REST({ version: '10' }).setToken(TOKEN3);
 
 (async () => {
   try {
