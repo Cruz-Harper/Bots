@@ -1,4 +1,5 @@
 public class Jigglypuff {
+    private String userId;  // <-- new field to specify owner
     private String name;
     private int level;
     private int happiness;
@@ -6,7 +7,8 @@ public class Jigglypuff {
     private boolean isShiny;
     private boolean isSleeping;
 
-    public Jigglypuff(String name, int level, int happiness, String attribute, boolean isShiny) {
+    public Jigglypuff(String userId, String name, int level, int happiness, String attribute, boolean isShiny) {
+        this.userId = userId;
         this.name = name;
         this.level = level;
         this.happiness = happiness;
@@ -15,7 +17,12 @@ public class Jigglypuff {
         this.isSleeping = false; // Starts awake by default
     }
 
-    // Getters
+    // Getter for userId
+    public String getUserId() {
+        return userId;
+    }
+
+    // Other getters
     public String getName() { return name; }
     public int getLevel() { return level; }
     public int getHappiness() { return happiness; }
@@ -88,20 +95,20 @@ public class Jigglypuff {
 
     public String toJSON() {
         return String.format(
-            "{\"name\":\"%s\",\"level\":%d,\"happiness\":%d,\"attribute\":\"%s\",\"isShiny\":%b,\"isSleeping\":%b}",
-            name, level, happiness, attribute, isShiny, isSleeping
+            "{\"userId\":\"%s\",\"name\":\"%s\",\"level\":%d,\"happiness\":%d,\"attribute\":\"%s\",\"isShiny\":%b,\"isSleeping\":%b}",
+            userId, name, level, happiness, attribute, isShiny, isSleeping
         );
     }
 
     @Override
     public String toString() {
-        return name + " [Lvl: " + level + ", Happy: " + happiness + ", Attr: " + attribute +
-               ", Shiny: " + isShiny + ", Sleeping: " + isSleeping + "]";
+        return String.format("%s's Jigglypuff %s [Lvl: %d, Happy: %d, Attr: %s, Shiny: %b, Sleeping: %b]",
+            userId, name, level, happiness, attribute, isShiny, isSleeping);
     }
 
     // 🟡 Main method for testing right inside Jigglypuff.java
     public static void main(String[] args) {
-        Jigglypuff puff = new Jigglypuff("Fluffy", 1, 50, "Energetic", false);
+        Jigglypuff puff = new Jigglypuff("user123", "Fluffy", 1, 50, "Energetic", false);
 
         System.out.println("Initial Puff:");
         System.out.println(puff);
@@ -123,3 +130,4 @@ public class Jigglypuff {
     }
 }
 // end :)
+
