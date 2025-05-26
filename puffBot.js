@@ -52,79 +52,123 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     case 'release': {
-  const fs = require('fs');
-  const userId = interaction.user.id;
+      const puffs = loadPuffs();
 
-  const puffs = fs.existsSync('puffs.json') ? JSON.parse(fs.readFileSync('puffs.json')) : {};
+      if (!puffs[userId]) {
+        await interaction.reply("You don't have a Jigglypuff to release.");
+        return;
+      }
 
-  if (!puffs[userId]) {
-    await interaction.reply("You don't have a Jigglypuff to release.");
-    return;
-  }
+      const releasedName = puffs[userId].name;
+      delete puffs[userId];
 
-  const releasedName = puffs[userId].name;
-  delete puffs[userId];
+      savePuffs(puffs);
+      await interaction.reply(`You released **${releasedName}** into the wild.\nhttps://tenor.com/bw7jP.gif`);
+      break;
+    }
 
-  fs.writeFileSync('puffs.json', JSON.stringify(puffs, null, 2));
-  await interaction.reply(`You released **${releasedName}** into the wild.\n` + "https://tenor.com/bw7jP.gif");
-  break;
-}
+    case 'adopt': {
+      const name = interaction.options.getString('name');
 
- case 'adopt': {
-  const fs = require('fs');
-  const name = interaction.options.getString('name');
-  const userId = interaction.user.id;
+      const puffs = loadPuffs();
 
-  const attributes = ['Fighter', 'Lazy', 'Energetic', 'Calm', 'Playful', 'Serious', 'Curious'];
-  const attribute = attributes[Math.floor(Math.random() * attributes.length)];
+      if (puffs[userId]) {
+        await interaction.reply("You already adopted a Jigglypuff! Use `/release` to let it go first.");
+        return;
+      }
 
-  // 💫 Shiny logic: 50% for special user, 0.5% for others
-  const isSpecialUser = userId === '1279794540253020264';
-  const isShiny = Math.random() < (isSpecialUser ? 0.5 : 0.005);
+      const attribute = getRandomAttribute();
 
-  let puffs = fs.existsSync('puffs.json') ? JSON.parse(fs.readFileSync('puffs.json')) : {};
+      // 💫 Shiny logic: 50% for special user, 0.5% for others
+      const isSpecialUser = userId === '1279794540253020264';
+      const isShiny = Math.random() < (isSpecialUser ? 0.5 : 0.005);
 
-  if (puffs[userId]) {
-    await interaction.reply("You already adopted a Jigglypuff! Use `/release` to let it go first.");
-    return;
-  }
+      const newPuff = {
+        name,
+        level: 1,
+        happiness: 50,
+        attribute,
+        isShiny,
+        isSleeping: false
+      };
 
-  const newPuff = {
-    name,
-    level: 1,
-    happiness: 50,
-    attribute,
-    isShiny,
-    isSleeping: false
-  };
+      puffs[userId] = newPuff;
+      savePuffs(puffs);
 
-  puffs[userId] = newPuff;
-  fs.writeFileSync('puffs.json', JSON.stringify(puffs, null, 2));
+      const shinyMsg = isShiny ? " ✨ It's SHINY!" : "";
+      await interaction.reply(`You adopted **${name}**, a ${attribute} Jigglypuff!${shinyMsg}`);
+      break;
+    }
 
-  const shinyMsg = isShiny ? " ✨ It's SHINY!" : "";
-  await interaction.reply(`You adopted **${name}**, a ${attribute} Jigglypuff!${shinyMsg}`);
-  break;
-}
+    case 'mypuff': {
+      const puffs = loadPuffs();
+      const puff = puffs[userId];
 
-      case 'mypuff': {
-  const userId = interaction.user.id;
-  const puffs = JSON.parse(fs.readFileSync('puffs.json', 'utf8'));
-  const puff = puffs[userId];
+      if (!puff) {
+        await interaction.reply("You haven't adopted a Jigglypuff yet! Use `/adopt` to get started.");
+      } else {
+        await interaction.reply(
+          `🎀 **${puff.name}** [Level ${puff.level}]` +
+          `\n💖 Happiness: ${puff.happiness}` +
+          `\n🌈 Attribute: ${puff.attribute}` +
+          `\n✨ Shiny: ${puff.isShiny ? 'Yes' : 'No'}` +
+          `\n😴 Sleeping: ${puff.isSleeping ? 'Yes' : 'No'}`
+        );
+      }
+      break;
+    }
 
-  if (!puff) {
-    await interaction.reply("You haven't adopted a Jigglypuff yet! Use `/adopt` to get started.");
-  } else {
-    await interaction.reply(
-      `🎀 **${puff.name}** [Level ${puff.level}]` +
-      `\n💖 Happiness: ${puff.happiness}` +
-      `\n🌈 Attribute: ${puff.attribute}` +
-      `\n✨ Shiny: ${puff.isShiny ? 'Yes' : 'No'}` +
-      `\n😴 Sleeping: ${puff.isSleeping ? 'Yes' : 'No'}`
-    );
-  }
-  break;
-}
+    case 'train': {
+      const puffs = loadPuffs();
 
+      if (!puffs[userId]) {
+        await interaction.reply("You don't have a Jigglypuff yet! Use `/adopt` to get one.");
+        break;
+      }
+
+      const puff = puffs[userId];
+
+      if (puff.isSleeping) {
+        await interaction.reply(`${puff.name} is sleeping and cannot train right now.`);
+        break;
+      }
+
+      puff.level += 1;
+
+      switch (puff.attribute.toLowerCase()) {
+        case "fighter":
+          puff.happiness += 10;
+          break;
+        case "lazy":
+          puff.happiness -= 5;
+          break;
+        case "energetic":
+          puff.happiness += 15;
+          break;
+        case "calm":
+          puff.happiness += 2;
+          break;
+        case "playful":
+          puff.happiness += 8;
+          break;
+        case "serious":
+          puff.happiness -= 3;
+          break;
+        case "curious":
+          puff.happiness += 6;
+          break;
+        default:
+          puff.happiness += 5;
+      }
+
+      // Clamp happiness between 0 and 100
+      puff.happiness = Math.max(0, Math.min(puff.happiness, 100));
+
+      savePuffs(puffs);
+
+      await interaction.reply(`${puff.name} trained! Level is now ${puff.level} and happiness is ${puff.happiness}. 🎯`);
+      break;
+    }
 
     default:
       await interaction.reply({ content: 'Unknown command.', ephemeral: true });
@@ -153,10 +197,13 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName('mypuff')
-    .setDescription('View your adopted Jigglypuff and its stats')
+    .setDescription('View your adopted Jigglypuff and its stats'),
+
+  new SlashCommandBuilder()
+    .setName('train')
+    .setDescription('Train your Jigglypuff to increase its level and happiness')
 ]
 .map(command => command.toJSON());
-
 
 const rest = new REST({ version: '10' }).setToken(TOKEN3);
 
