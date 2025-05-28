@@ -51,6 +51,11 @@ client.on('interactionCreate', async (interaction) => {
       break;
     }
 
+    case 'about': {
+      await interaction.reply("Train your puff and grow your bond! I being developed by user @qmqz2 and I still have LOTS of problems and bugs so if you discover any, please dm me!");
+      break;
+    }
+
     case 'release': {
       const puffs = loadPuffs();
 
@@ -201,7 +206,11 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName('train')
-    .setDescription('Train your Jigglypuff to increase its level and happiness')
+    .setDescription('Train your Jigglypuff to increase its level and happiness'),
+
+  new SlashCommandBuilder()
+    .setName('about')
+    .setDescription('Learn about me and my genius creator!')
 ]
 .map(command => command.toJSON());
 
