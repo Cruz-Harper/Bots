@@ -508,7 +508,7 @@ const commands = [
   new SlashCommandBuilder().setName('about').setDescription('About the bot.'),
   new SlashCommandBuilder().setName('ping').setDescription('Ping the bot.'),
   new SlashCommandBuilder().setName('commands').setDescription('Show available commands.'),
-  new SlashCommandBuilder().setName('support').setDescription('A link to our support server.')
+  new SlashCommandBuilder().setName('support').setDescription('A link to our support server.'),
   new SlashCommandBuilder().setName('stopbracket').setDescription('Stops and deletes the current bracket')
 
 ];
