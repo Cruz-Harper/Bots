@@ -452,6 +452,26 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply("https://discord.gg/f2rMKaQvP9")
         break;
       }
+      case 'stopbracket': {
+  const bracket = brackets.get(interaction.channel.id);
+  if (!bracket) {
+    await interaction.reply({ content: '❌ There is no active bracket in this channel to stop.', ephemeral: true });
+    return;
+  }
+
+  brackets.delete(interaction.channel.id);
+
+  // Also clear check-ins related to this bracket
+  for (const key of checkIns.keys()) {
+    if (key.startsWith(`${interaction.channel.id}-`)) {
+      checkIns.delete(key);
+    }
+  }
+
+  await interaction.reply('🛑 The bracket has been stopped and all data for this channel has been cleared.');
+  break;
+}
+
       case 'commands': {
         const embed = new EmbedBuilder()
           .setTitle('Available Commands')
@@ -489,6 +509,8 @@ const commands = [
   new SlashCommandBuilder().setName('ping').setDescription('Ping the bot.'),
   new SlashCommandBuilder().setName('commands').setDescription('Show available commands.'),
   new SlashCommandBuilder().setName('support').setDescription('A link to our support server.')
+  new SlashCommandBuilder().setName('stopbracket').setDescription('Stops and deletes the current bracket')
+
 ];
 
 const rest = new REST({ version: '10' }).setToken(TOKEN2);
